@@ -1,0 +1,47 @@
+name: CI - dbt build
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dbt-ci:
+    runs-on: ubuntu-latest
+
+    env:
+      DBT_PROFILES_DIR: ./registro_municipal_integrado
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependências Python
+        run: pip install -r requirements.txt
+
+      - name: Restaurar cache dos pacotes dbt
+        uses: actions/cache@v4
+        with:
+          path: dbt_packages
+          key: dbt-packages-${{ hashFiles('packages.yml') }}
+
+      - name: Instalar pacotes dbt
+        run: dbt deps
+
+      - name: Validar projeto dbt
+        run: dbt parse
+
+      - name: Verificar qualidade do SQL
+        run: sqlfluff lint models/
+        
+      - name: Executar build do dbt
+        run: dbt build --fail-fast
