@@ -1,21 +1,18 @@
+WITH source AS (
 
-
-with source as (
-
-    select * from {{ source('rmi', 'turma') }}
+    SELECT * FROM {{ source('rmi', 'turma') }}
 
 ),
 
-renamed as (
+renamed_typed AS (
 
-    select
-        ano,
-        id_turma,
-        id_aluno
+    SELECT
+        cast(ano AS int) AS ano,
+        cast(id_turma AS bigint) AS turma_id,
+        cast(hex(id_aluno) AS varchar) AS aluno_id
 
-    from source
+    FROM source
 
 )
 
-select * from renamed
-
+SELECT * FROM renamed_typed

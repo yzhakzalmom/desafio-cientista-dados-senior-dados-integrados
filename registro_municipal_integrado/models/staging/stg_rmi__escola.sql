@@ -1,20 +1,17 @@
+WITH source AS (
 
-
-with source as (
-
-    select * from {{ source('rmi', 'escola') }}
+    SELECT * FROM {{ source('rmi', 'escola') }}
 
 ),
 
-renamed as (
+renamed_typed AS (
 
-    select
-        id_escola,
-        bairro
+    SELECT
+        cast(id_escola AS bigint) AS escola_id,
+        cast(bairro AS bigint) AS bairro
 
-    from source
+    FROM source
 
 )
 
-select * from renamed
-
+SELECT * FROM renamed_typed

@@ -1,25 +1,31 @@
+WITH source AS (
 
-
-with source as (
-
-    select * from {{ source('rmi', 'frequencia') }}
+    SELECT * FROM {{ source('rmi', 'frequencia') }}
 
 ),
 
-renamed as (
+renamed_typed AS (
 
-    select
-        id_escola,
-        id_aluno,
-        id_turma,
-        data_inicio,
-        data_fim,
-        disciplina,
-        frequencia
+    SELECT
+        cast(id_escola AS bigint) AS escola_id,
+        -- aplica hex para melhorar visualização dos dados
+        cast(hex(id_aluno) AS varchar) AS aluno_id,
+        cast(id_turma AS bigint) AS turma_id,
+        cast(data_inicio AS date) AS data_inicio,
+        cast(data_fim AS date) AS data_fim,
+        cast(disciplina AS varchar) AS disciplina,
+        cast(frequencia AS double) AS frequencia
 
-    from source
+    FROM source
 
+),
+
+cleaned_treated AS (
+    SELECT
+        *,
+        -- flag de ausência do aluno
+        ((frequencia IS null) OR (frequencia == 0)) AS is_aluno_ausente
+    FROM renamed_typed
 )
 
-select * from renamed
-
+SELECT * FROM cleaned_treated

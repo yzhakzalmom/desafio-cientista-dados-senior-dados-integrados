@@ -36,7 +36,7 @@ models:
         description: ""
 
       - name: bimestre
-        data_type: varchar
+        data_type: int
         description: ""
 
       - name: disciplina_1
