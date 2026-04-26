@@ -1,0 +1,114 @@
+version: 2
+
+models:
+  - name: stg_rmi__aluno
+    description: ""
+    columns:
+      - name: id_aluno
+        data_type: blob
+        description: ""
+
+      - name: id_turma
+        data_type: bigint
+        description: ""
+
+      - name: faixa_etaria
+        data_type: varchar
+        description: ""
+
+      - name: bairro
+        data_type: bigint
+        description: ""
+
+  - name: stg_rmi__avaliacao
+    description: ""
+    columns:
+      - name: id_aluno
+        data_type: blob
+        description: ""
+
+      - name: id_turma
+        data_type: bigint
+        description: ""
+
+      - name: frequencia
+        data_type: double
+        description: ""
+
+      - name: bimestre
+        data_type: varchar
+        description: ""
+
+      - name: disciplina_1
+        data_type: double
+        description: ""
+
+      - name: disciplina_2
+        data_type: double
+        description: ""
+
+      - name: disciplina_3
+        data_type: double
+        description: ""
+
+      - name: disciplina_4
+        data_type: double
+        description: ""
+
+  - name: stg_rmi__escola
+    description: ""
+    columns:
+      - name: id_escola
+        data_type: bigint
+        description: ""
+
+      - name: bairro
+        data_type: bigint
+        description: ""
+
+  - name: stg_rmi__frequencia
+    description: ""
+    columns:
+      - name: id_escola
+        data_type: bigint
+        description: ""
+
+      - name: id_aluno
+        data_type: blob
+        description: ""
+
+      - name: id_turma
+        data_type: bigint
+        description: ""
+
+      - name: data_inicio
+        data_type: varchar
+        description: ""
+
+      - name: data_fim
+        data_type: varchar
+        description: ""
+
+      - name: disciplina
+        data_type: varchar
+        description: ""
+
+      - name: frequencia
+        data_type: double
+        description: ""
+
+  - name: stg_rmi__turma
+    description: ""
+    columns:
+      - name: ano
+        data_type: bigint
+        description: ""
+
+      - name: id_turma
+        data_type: bigint
+        description: ""
+
+      - name: id_aluno
+        data_type: blob
+        description: ""
+
