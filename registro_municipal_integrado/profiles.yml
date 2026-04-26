@@ -3,7 +3,7 @@ registro_municipal_integrado:
     dev:
       type: duckdb
       path: ./data/dev.duckdb
-      schema: bronze
+      schema: staging
       threads: 1
       extensions:
         - httpfs
