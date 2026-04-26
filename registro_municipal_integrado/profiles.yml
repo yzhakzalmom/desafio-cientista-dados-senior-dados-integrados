@@ -2,7 +2,9 @@ registro_municipal_integrado:
   outputs:
     dev:
       type: duckdb
-      path: data/dev.duckdb
+      path: ./data/dev.duckdb
       threads: 1
+      extensions:
+        - httpfs
 
   target: dev
