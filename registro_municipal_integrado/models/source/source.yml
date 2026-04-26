@@ -1,5 +1,7 @@
 sources:
     - name: rmi
+      database: dev
+      schema: rmi
       tables:
         - name: aluno
           description: Cadastro de alunos
@@ -11,5 +13,3 @@ sources:
           description: Registros de frequência escolar
         - name: turma
           description: Informações de turmas
-      meta:
-        external_location: "read_parquet('https://storage.googleapis.com/case_vagas/rmi/{name}')"
