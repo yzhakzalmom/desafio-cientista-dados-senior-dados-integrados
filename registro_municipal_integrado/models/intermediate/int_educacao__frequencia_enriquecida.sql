@@ -59,7 +59,7 @@ joined AS (
         e.bairro AS escola_bairro
 
     FROM
-        frequencia f
+        frequencia AS f
 
     {#
       LEFT JOINs preservam todos os registros de frequência mesmo que
@@ -68,10 +68,10 @@ joined AS (
       definidos em stg_rmi__frequencia antes de chegarem aqui.
     #}
     LEFT JOIN
-        aluno a
+        aluno AS a
         ON f.aluno_id = a.aluno_id
     LEFT JOIN
-        escola e
+        escola AS e
         ON f.escola_id = e.escola_id
 )
 

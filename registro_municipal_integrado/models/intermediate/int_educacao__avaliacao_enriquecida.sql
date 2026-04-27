@@ -69,7 +69,7 @@ joined AS (
         t.tamanho AS turma_tamanho
 
     FROM
-        avaliacao av
+        avaliacao AS av
 
     {#
       LEFT JOINs garantem que nenhum registro de avaliação seja descartado
@@ -78,10 +78,10 @@ joined AS (
       Os testes de FK em stg_rmi__avaliacao sinalizam esses casos previamente.
     #}
     LEFT JOIN
-        aluno al
+        aluno AS al
         ON av.aluno_id = al.aluno_id
     LEFT JOIN
-        tamanho_turma t
+        tamanho_turma AS t
         ON av.turma_id = t.turma_id
 )
 
