@@ -10,7 +10,7 @@ renamed_typed AS (
         -- aplica hex para melhorar visualização dos dados
         cast(hex(id_aluno) AS varchar) AS aluno_id,
         cast(id_turma AS bigint) AS turma_id,
-        cast(frequencia AS double) AS frequencia,
+        cast(frequencia AS double) AS frequencia_anual,
         cast(bimestre AS int) AS bimestre,
         -- nomes das disciplinas conforme descrito em case_vagas/rmi_schema.yml
         cast(disciplina_1 AS double) AS portugues,
@@ -28,18 +28,12 @@ cleaned_treated AS (
         turma_id,
         bimestre,
         -- flag de ausência do aluno
-        coalesce(frequencia, 0) AS frequencia,
-        ((frequencia IS null) OR (frequencia == 0)) AS is_aluno_ausente,
-        -- preenche com zero notas ausentes
-        coalesce(portugues, 0) AS portugues,
-        coalesce(ciencias, 0) AS ciencias,
-        coalesce(ingles, 0) AS ingles,
-        coalesce(matematica, 0) AS matematica,
-        -- flags de ausência de nota por disciplina (provável ausência da prova)
-        portugues IS null AS is_portugues_ausente,
-        ciencias IS null AS is_ciencias_ausente,
-        ingles IS null AS is_ingles_ausente,
-        matematica IS null AS is_matematica_ausente
+        portugues,
+        ciencias,
+        ingles,
+        matematica,
+        coalesce(frequencia_anual, 0) AS frequencia_anual,
+        ((frequencia_anual IS null) OR (frequencia_anual == 0)) AS is_aluno_ausente
     FROM renamed_typed
 ),
 
@@ -59,7 +53,7 @@ deduped AS (
                     + cast((matematica <> 0) AS int)
                 ) DESC,
                 -- desempate: maior frequencia primeiro
-                frequencia DESC
+                frequencia_anual DESC
         ) AS rn
     FROM cleaned_treated
 )

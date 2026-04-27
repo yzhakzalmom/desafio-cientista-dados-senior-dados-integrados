@@ -18,7 +18,6 @@ common_freq_tests: &freq_tests
 # Nota da avaliação deve estar entre 0 e 10 e não deve ser nula
 common_nota_disciplina_test: &nota_disciplina_test
   data_tests:
-    - not_null
     - dbt_expectations.expect_column_values_to_be_between:
         arguments:
           min_value: 0
@@ -111,7 +110,7 @@ models:
         # FK: não nula e deve existir em stg_rmi__turma
         <<: *turma_id_relationship_test
 
-      - name: frequencia
+      - name: frequencia_anual
         data_type: double
         description: "Percentual de frequência do aluno por disciplina/bimestre, no intervalo de 0 a 100."
         # Não nula e dentro do intervalo percentual válido (0-100)
@@ -153,22 +152,6 @@ models:
         description: "Nota do aluno em Matemática no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
         # Não nula e dentro do intervalo de notas válido (0-10)
         <<: *nota_disciplina_test
-
-      - name: is_portugues_ausente
-        data_type: boolean
-        description: "Indica se a nota de Português está ausente para este aluno/bimestre."
-
-      - name: is_ciencias_ausente
-        data_type: boolean
-        description: "Indica se a nota de Ciências está ausente para este aluno/bimestre."
-
-      - name: is_ingles_ausente
-        data_type: boolean
-        description: "Indica se a nota de Inglês está ausente para este aluno/bimestre."
-
-      - name: is_matematica_ausente
-        data_type: boolean
-        description: "Indica se a nota de Matemática está ausente para este aluno/bimestre."
 
   - name: stg_rmi__escola
     description: >
