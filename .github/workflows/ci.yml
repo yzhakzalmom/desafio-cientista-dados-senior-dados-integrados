@@ -28,6 +28,9 @@ jobs:
       - name: Instalar dependências Python
         run: pip install -r requirements.txt
 
+      - name: Muda diretório para registro_municipal_integrado
+        run: cd registro_municipal_integrado
+
       - name: Restaurar cache dos pacotes dbt
         uses: actions/cache@v4
         with:
@@ -41,7 +44,7 @@ jobs:
         run: dbt parse
 
       - name: Verificar qualidade do SQL
-        run: sqlfluff lint models/
+        run: sqlfluff lint models/ tests/ 
         
       - name: Executar build do dbt
         run: dbt build --fail-fast
