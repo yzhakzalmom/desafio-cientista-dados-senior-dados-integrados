@@ -25,10 +25,15 @@ lint: ## Roda sqlfluff lint nos models
 test: ## Roda os testes dbt
 	uv run dbt test
 
+# ===== DUCKDB ===== #
+duckdb-ui: ## Inicializa UI do DuckDB
+	uv run duckdb -ui data/dev.duckdb
+
 # ===== BÁSICOS UV ===== #
 requirements-txt:
 	uv export --format requirements-txt > requirements.txt
 
+# ===== MACROS ===== #
 create-source-views: ## Cria o schema rmi e as views no DuckDB apontando para o GCS
 	uv run dbt run-operation create_source_views
 
@@ -59,6 +64,9 @@ run-stg: ## Executa o model staging
 	uv run dbt run --select "models/staging"
 
 full-run-stg: deps create-source-views run-stg ## Instala pacotes, cria source views e executa model staging
+
+run-intermediate: ## Executa o model intermediate
+	uv run dbt run --select "models/intermediate"
 
 full-build: deps create-source-views build ## Instala packages, cria schemas e roda dbt build
 
