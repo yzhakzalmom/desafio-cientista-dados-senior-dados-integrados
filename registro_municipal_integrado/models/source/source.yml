@@ -1,0 +1,15 @@
+sources:
+    - name: rmi
+      database: dev
+      schema: rmi
+      tables:
+        - name: aluno
+          description: Cadastro de alunos
+        - name: avaliacao
+          description: Notas e avaliações por bimestre
+        - name: escola
+          description: Cadastro de unidades escolares
+        - name: frequencia
+          description: Registros de frequência escolar
+        - name: turma
+          description: Informações de turmas

@@ -12,8 +12,9 @@ jobs:
   dbt-ci:
     runs-on: ubuntu-latest
 
-    env:
-      DBT_PROFILES_DIR: ./registro_municipal_integrado
+    defaults:
+      run:
+        working-directory: ./registro_municipal_integrado
 
     steps:
       - name: Baixar repositório
@@ -37,11 +38,14 @@ jobs:
       - name: Instalar pacotes dbt
         run: dbt deps
 
+      - name: Criar arquivo .duckdb e views da fonte
+        run: dbt run-operation create_source_views
+        
       - name: Validar projeto dbt
         run: dbt parse
 
       - name: Verificar qualidade do SQL
-        run: sqlfluff lint models/
+        run: sqlfluff lint models/ tests/ 
         
       - name: Executar build do dbt
         run: dbt build --fail-fast

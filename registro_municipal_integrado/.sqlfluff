@@ -3,8 +3,8 @@ dialect = duckdb
 templater = dbt
 
 [sqlfluff:templater:dbt]
-project_dir = ./registro_municipal_integrado
-profiles_dir = ./registro_municipal_integrado
+project_dir = ./
+profiles_dir = ./
 
 [sqlfluff:rules:capitalisation.keywords]
 capitalisation_policy = upper
