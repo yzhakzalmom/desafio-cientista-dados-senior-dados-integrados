@@ -246,6 +246,17 @@ Teste singular implementado:
 
 ## Pendências (com lembretes)
 
+### Diferenciais (checklist)
+
+**Lembrete**: antes de entregar, confira se você incluiu (quando fizer sentido para sua solução):
+
+- Uso de dbt packages (`dbt_utils`, `dbt_expectations`, `codegen`)
+- Configuração de `freshness` nas sources
+- Uso de tags, hooks ou exposures
+- Testes de data contracts
+- Análise exploratória complementar (Parte 3, questão 9)
+- Configuração de CI com `dbt build` em GitHub Actions
+
 ### Parte 1 — Projeto dbt e Modelagem
 
 #### 4) Camada de Marts
