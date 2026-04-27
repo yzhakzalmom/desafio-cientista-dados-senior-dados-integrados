@@ -9,15 +9,30 @@ help: ## Lista todos os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+# ===== BÁSICOS DBT ===== #
+build: ## Realiza build dbt
+	uv run dbt build
+
+clean: ## Realiza dbt clean
+	uv run dbt clean
+
 deps: ## Instala dependências do dbt
 	uv run dbt deps
 
+lint: ## Roda sqlfluff lint nos models
+	uv run sqlfluff fix models/ tests/
+
+test: ## Roda os testes dbt
+	uv run dbt test
+
+# ===== BÁSICOS UV ===== #
 requirements-txt:
 	uv export --format requirements-txt > requirements.txt
 
 create-source-views: ## Cria o schema rmi e as views no DuckDB apontando para o GCS
 	uv run dbt run-operation create_source_views
 
+# ===== CODEGEN ===== #
 stg-base-models: ## Gera os .sql de staging para todas as tabelas do source rmi
 	@mkdir -p $(STAGING_DIR)
 	@for table in $(TABLES); do \
@@ -39,17 +54,11 @@ stg-models-schema: ## Gera o schema.yml com descrição dos models de staging
 
 codegen-stg: deps create-source-views stg-base-models run-stg stg-models-schema ## Pipeline completo: instala deps, cria views e roda codegen
 
-run-stg: ## Executa os models dbt
+# ===== COMANDOS COMPOSTOS PARA EXECUÇÃO E BUILD ===== #
+run-stg: ## Executa o model staging
 	uv run dbt run --select "models/staging"
 
-lint: ## Roda sqlfluff lint nos models
-	uv run sqlfluff lint models/ tests/
-
-test: ## Roda os testes dbt
-	uv run dbt test
-
-build: ## Realiza build dbt
-	uv run dbt build
+full-run-stg: deps create-source-views run-stg ## Instala pacotes, cria source views e executa model staging
 
 full-build: deps create-source-views build ## Instala packages, cria schemas e roda dbt build
 

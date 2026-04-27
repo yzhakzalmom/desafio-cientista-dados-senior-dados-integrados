@@ -41,6 +41,28 @@ cleaned_treated AS (
         ingles IS null AS is_ingles_ausente,
         matematica IS null AS is_matematica_ausente
     FROM renamed_typed
+),
+
+-- Aplica deduplicação, pois alguns registros da combinação (aluno_id, turma_id, bimestre) tem informações inconsistentes em uma das linhas duplicadas
+-- Essa inconsistências se baseiam em falta de notas e diferença entre preenchimento de frequências
+deduped AS (
+    SELECT
+        *,
+        row_number() OVER (
+            PARTITION BY aluno_id, turma_id, bimestre
+            ORDER BY
+                -- maior número de colunas preenchidas primeiro
+                (
+                    cast((portugues <> 0) AS int)
+                    + cast((ciencias <> 0) AS int)
+                    + cast((ingles <> 0) AS int)
+                    + cast((matematica <> 0) AS int)
+                ) DESC,
+                -- desempate: maior frequencia primeiro
+                frequencia DESC
+        ) AS rn
+    FROM cleaned_treated
 )
 
-SELECT * FROM cleaned_treated
+SELECT * EXCLUDE (rn) FROM deduped
+WHERE rn = 1

@@ -11,32 +11,36 @@ common_freq_tests: &freq_tests
   data_tests:
     - not_null
     - dbt_expectations.expect_column_values_to_be_between:
-        min_value: 0
-        max_value: 100
+        arguments:
+          min_value: 0
+          max_value: 100
 
 # Nota da avaliação deve estar entre 0 e 10 e não deve ser nula
 common_nota_disciplina_test: &nota_disciplina_test
   data_tests:
     - not_null
     - dbt_expectations.expect_column_values_to_be_between:
-        min_value: 0
-        max_value: 10
+        arguments:
+          min_value: 0
+          max_value: 10
 
 # Valida relacionamento com stg_rmi__aluno.aluno_id
 common_aluno_id_relationship_test: &aluno_id_relationship_test
   data_tests:
     - not_null
     - relationships:
-        to: ref('stg_rmi__aluno')
-        field: aluno_id
+        arguments:
+          to: ref('stg_rmi__aluno')
+          field: aluno_id
 
 # Valida relacionamento com stg_rmi__turma.turma_id
 common_turma_id_relationship_test: &turma_id_relationship_test
   data_tests:
     - not_null
     - relationships:
-        to: ref('stg_rmi__turma')
-        field: turma_id
+        arguments:
+          to: ref('stg_rmi__turma')
+          field: turma_id
 
 models:
   - name: stg_rmi__aluno
@@ -64,7 +68,8 @@ models:
         # Garante que apenas as faixas etárias definidas no domínio sejam aceitas
         data_tests:
           - dbt_expectations.expect_column_values_to_be_in_set:
-              value_set: ['0-5', '6-10', '11-14', '15-17', '18+']
+              arguments:
+                value_set: ['0-5', '6-10', '11-14', '15-17', '18+']
 
       - name: faixa_etaria_nome
         data_type: varchar
@@ -79,6 +84,14 @@ models:
         description: "Identificador do bairro de residência do aluno. Anonimizado. Pode ser cruzado com a tabela de bairros do datario para enriquecimento geográfico."
 
   - name: stg_rmi__avaliacao
+    data_tests:
+        # PK Composta: a combinação entre aluno_id + turma_id + bimestre deve ser única
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - aluno_id
+              - turma_id
+              - bimestre 
     description: >
       Registros de avaliação bimestral dos alunos por disciplina.
       Cada linha representa a avaliação de um aluno em uma turma,
@@ -110,7 +123,8 @@ models:
         # Garante que apenas os quatro bimestres do ano letivo sejam aceitos
         data_tests:
           - dbt_expectations.expect_column_values_to_be_in_set:
-              value_set: [1, 2, 3, 4]
+              arguments:
+                value_set: [1, 2, 3, 4]
 
       - name: is_aluno_ausente
         data_type: boolean
@@ -179,11 +193,13 @@ models:
     # PK composta: a combinação escola + aluno + turma + disciplina deve ser única
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - escola_id
-            - aluno_id
-            - turma_id
-            - disciplina
+          arguments:
+            combination_of_columns:
+              - escola_id
+              - aluno_id
+              - turma_id
+              - disciplina
+              - data_inicio
     description: >
       Registros de frequência anual dos alunos por disciplina.
       Cada linha representa a frequência de um aluno em uma disciplina
@@ -198,8 +214,9 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_rmi__escola')
-              field: escola_id
+              arguments:
+                to: ref('stg_rmi__escola')
+                field: escola_id
 
       - name: aluno_id
         data_type: varchar
@@ -227,7 +244,8 @@ models:
         # Garante que apenas as quatro disciplinas definidas no domínio sejam aceitas
         data_tests:
           - dbt_expectations.expect_column_values_to_be_in_set:
-              value_set: ['Português', 'Ciências', 'Inglês', 'Matemática']
+              arguments:
+                value_set: ['Português', 'Ciências', 'Inglês', 'Matemática']
 
       - name: frequencia
         data_type: double
@@ -249,9 +267,10 @@ models:
     # PK composta: a combinação turma + aluno deve ser única
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - turma_id
-            - aluno_id
+          arguments:
+            combination_of_columns:
+              - turma_id
+              - aluno_id
     columns:
       - name: ano
         data_type: integer
