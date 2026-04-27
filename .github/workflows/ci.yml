@@ -12,8 +12,9 @@ jobs:
   dbt-ci:
     runs-on: ubuntu-latest
 
-    env:
-      DBT_PROFILES_DIR: ./registro_municipal_integrado
+    defaults:
+      run:
+        working-directory: ./registro_municipal_integrado
 
     steps:
       - name: Baixar repositório
@@ -27,9 +28,6 @@ jobs:
 
       - name: Instalar dependências Python
         run: pip install -r requirements.txt
-
-      - name: Muda diretório para registro_municipal_integrado
-        run: cd registro_municipal_integrado
 
       - name: Restaurar cache dos pacotes dbt
         uses: actions/cache@v4
