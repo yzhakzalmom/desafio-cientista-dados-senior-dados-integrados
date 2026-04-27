@@ -35,6 +35,9 @@ jobs:
           path: dbt_packages
           key: dbt-packages-${{ hashFiles('packages.yml') }}
 
+      - name: Criar arquivo .duckdb e views da fonte
+        run: dbt run-operation create_source_views
+
       - name: Instalar pacotes dbt
         run: dbt deps
 
