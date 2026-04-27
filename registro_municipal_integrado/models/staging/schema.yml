@@ -29,8 +29,6 @@ common_aluno_id_relationship_test: &aluno_id_relationship_test
     - relationships:
         to: ref('stg_rmi__aluno')
         field: aluno_id
-        config:
-          severity: warn
 
 # Valida relacionamento com stg_rmi__turma.turma_id
 common_turma_id_relationship_test: &turma_id_relationship_test
@@ -39,8 +37,6 @@ common_turma_id_relationship_test: &turma_id_relationship_test
     - relationships:
         to: ref('stg_rmi__turma')
         field: turma_id
-        config:
-          severity: warn
 
 models:
   - name: stg_rmi__aluno
@@ -132,7 +128,7 @@ models:
         # Não nula e dentro do intervalo de notas válido (0-10)
         <<: *nota_disciplina_test
 
-      - name: Inglês
+      - name: ingles
         data_type: double
         description: "Nota do aluno em Inglês no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
         # Não nula e dentro do intervalo de notas válido (0-10)
@@ -188,8 +184,6 @@ models:
             - aluno_id
             - turma_id
             - disciplina
-          config:
-            severity: warn
     description: >
       Registros de frequência anual dos alunos por disciplina.
       Cada linha representa a frequência de um aluno em uma disciplina

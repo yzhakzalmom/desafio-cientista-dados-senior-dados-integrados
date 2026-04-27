@@ -15,9 +15,6 @@ deps: ## Instala dependências do dbt
 requirements-txt:
 	uv export --format requirements-txt > requirements.txt
 
-run-stg: ## Executa os models dbt
-	uv run dbt run --select "models/staging"
-
 create-source-views: ## Cria o schema rmi e as views no DuckDB apontando para o GCS
 	uv run dbt run-operation create_source_views
 
@@ -42,11 +39,19 @@ stg-models-schema: ## Gera o schema.yml com descrição dos models de staging
 
 codegen-stg: deps create-source-views stg-base-models run-stg stg-models-schema ## Pipeline completo: instala deps, cria views e roda codegen
 
-# lint: ## Roda sqlfluff lint nos models
-# 	uv run sqlfluff lint models/
+run-stg: ## Executa os models dbt
+	uv run dbt run --select "models/staging"
+
+lint: ## Roda sqlfluff lint nos models
+	uv run sqlfluff lint models/ tests/
 
 test: ## Roda os testes dbt
 	uv run dbt test
+
+build: ## Realiza build dbt
+	uv run dbt build
+
+full-build: deps create-source-views build ## Instala packages, cria schemas e roda dbt build
 
 # docs: ## Gera e serve a documentação
 # 	uv run dbt docs generate && uv run dbt docs serve

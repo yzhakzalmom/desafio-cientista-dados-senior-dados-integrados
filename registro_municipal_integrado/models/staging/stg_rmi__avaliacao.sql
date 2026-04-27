@@ -39,7 +39,7 @@ cleaned_treated AS (
         portugues IS null AS is_portugues_ausente,
         ciencias IS null AS is_ciencias_ausente,
         ingles IS null AS is_ingles_ausente,
-        matematica IS null AS is_matematica_4_ausente
+        matematica IS null AS is_matematica_ausente
     FROM renamed_typed
 )
 

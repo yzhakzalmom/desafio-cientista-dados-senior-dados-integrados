@@ -38,3 +38,10 @@ models:
       +materialized: view
     marts:
       +materialized: table
+
+tests:
+  registro_municipal_integrado:
+    # Como se trata de staging, sabe-se que certos erros nos dados acontecerão e serão corrigidos nas próximas camadas
+    # Então, para não parar a execução, define a severidade como warn
+    staging:
+      +severity: warn

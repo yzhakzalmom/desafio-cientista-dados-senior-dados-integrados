@@ -27,11 +27,11 @@ cleaned_treated AS (
         turma_id,
         data_inicio,
         data_fim,
-        CASE
-            WHEN disciplina_1 THEN português
-            WHEN disciplina_2 THEN ciências
-            WHEN disciplina_3 THEN inglês
-            WHEN disciplina_4 THEN matemática
+        CASE disciplina
+            WHEN 'disciplina_1' THEN 'Português'
+            WHEN 'disciplina_2' THEN 'Ciências'
+            WHEN 'disciplina_3' THEN 'Inglês'
+            WHEN 'disciplina_4' THEN 'Matemática'
         END AS disciplina,
         -- flag de ausência do aluno
         coalesce(frequencia, 0) AS frequencia,
