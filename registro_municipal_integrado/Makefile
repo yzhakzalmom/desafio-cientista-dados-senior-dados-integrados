@@ -60,6 +60,9 @@ run-stg: ## Executa o model staging
 
 full-run-stg: deps create-source-views run-stg ## Instala pacotes, cria source views e executa model staging
 
+run-intermediate: ## Executa o model intermediate
+	uv dbt run --select "models/intermediate"
+
 full-build: deps create-source-views build ## Instala packages, cria schemas e roda dbt build
 
 # docs: ## Gera e serve a documentação
