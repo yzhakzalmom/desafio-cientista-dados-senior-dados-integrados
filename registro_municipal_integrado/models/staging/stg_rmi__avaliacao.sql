@@ -25,9 +25,9 @@ cleaned_treated AS (
     SELECT
         aluno_id,
         turma_id,
-        frequencia,
-        -- flag de ausência do aluno
         bimestre,
+        -- flag de ausência do aluno
+        coalesce(frequencia, 0) AS frequencia,
         ((frequencia IS null) OR (frequencia == 0)) AS is_aluno_ausente,
         -- preenche com zero notas ausentes
         coalesce(disciplina_1, 0) AS disciplina_1,

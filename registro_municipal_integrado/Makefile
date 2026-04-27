@@ -43,8 +43,8 @@ codegen-stg: deps create-source-views stg-base-models run-stg stg-models-schema 
 # lint: ## Roda sqlfluff lint nos models
 # 	uv run sqlfluff lint models/
 
-# test: ## Roda os testes dbt
-# 	uv run dbt test
+test: ## Roda os testes dbt
+	uv run dbt test
 
 # docs: ## Gera e serve a documentação
 # 	uv run dbt docs generate && uv run dbt docs serve

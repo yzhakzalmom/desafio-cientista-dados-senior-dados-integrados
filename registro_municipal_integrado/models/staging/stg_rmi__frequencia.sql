@@ -22,7 +22,14 @@ renamed_typed AS (
 
 cleaned_treated AS (
     SELECT
-        *,
+        escola_id,
+        aluno_id,
+        turma_id,
+        data_inicio,
+        data_fim,
+        disciplina,
+        -- flag de ausência do aluno
+        coalesce(frequencia, 0) AS frequencia,
         -- flag de ausência do aluno
         ((frequencia IS null) OR (frequencia == 0)) AS is_aluno_ausente
     FROM renamed_typed

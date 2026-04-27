@@ -1,114 +1,277 @@
 version: 2
 
+# Valores de id (PK) devem ser únicos e não nulos
+common_id_tests: &id_tests
+  data_tests:
+    - unique
+    - not_null
+
+# Frequência deve estar entre 0 e 100 e não deve ser nula
+common_freq_tests: &freq_tests
+  data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        min_value: 0
+        max_value: 100
+
+# Nota da avaliação deve estar entre 0 e 10 e não deve ser nula
+common_nota_disciplina_test: &nota_disciplina_test
+  data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        min_value: 0
+        max_value: 10
+
+# Valida relacionamento com stg_rmi__aluno.aluno_id
+common_aluno_id_relationship_test: &aluno_id_relationship_test
+  data_tests:
+    - not_null
+    - relationships:
+        to: ref('stg_rmi__aluno')
+        field: aluno_id
+        config:
+          severity: warn
+
+# Valida relacionamento com stg_rmi__turma.turma_id
+common_turma_id_relationship_test: &turma_id_relationship_test
+  data_tests:
+    - not_null
+    - relationships:
+        to: ref('stg_rmi__turma')
+        field: turma_id
+        config:
+          severity: warn
+
 models:
   - name: stg_rmi__aluno
-    description: ""
+    description: >
+      Cadastro de alunos da rede municipal de ensino do Rio de Janeiro,
+      anonimizado para fins de análise. Cada linha representa um aluno único.
+      Contém informações de perfil (faixa etária, bairro de residência) e o
+      vínculo com a turma em que o aluno está matriculado.
     columns:
-      - name: id_aluno
-        data_type: blob
-        description: ""
-
-      - name: id_turma
-        data_type: bigint
-        description: ""
-
-      - name: faixa_etaria
+      - name: aluno_id
         data_type: varchar
-        description: ""
+        description: "Identificador único do aluno. Anonimizado — não representa nenhum documento pessoal real."
+        # PK: deve ser única e não nula
+        <<: *id_tests
+
+      - name: turma_id
+        data_type: bigint
+        description: "Identificador da turma em que o aluno está matriculado. Chave estrangeira para stg_rmi__turma."
+        # FK: não nula e deve existir em stg_rmi__turma
+        <<: *turma_id_relationship_test
+
+      - name: faixa_etaria_num
+        data_type: varchar
+        description: "Faixa etária do aluno representada como intervalo numérico (ex: '6-10', '11-14'). Preservada do dado original para rastreabilidade."
+        # Garante que apenas as faixas etárias definidas no domínio sejam aceitas
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_in_set:
+              value_set: ['0-5', '6-10', '11-14', '15-17', '18+']
+
+      - name: faixa_etaria_nome
+        data_type: varchar
+        description: >
+          Faixa etária do aluno representada como categoria descritiva,
+          derivada de faixa_etaria_num. Valores possíveis: Primeira Infância (0-5),
+          Infância (6-10), Pré Adolescente (11-14),
+          Adolescente (15-17), Adulto (18+).
 
       - name: bairro
         data_type: bigint
-        description: ""
+        description: "Identificador do bairro de residência do aluno. Anonimizado. Pode ser cruzado com a tabela de bairros do datario para enriquecimento geográfico."
 
   - name: stg_rmi__avaliacao
-    description: ""
+    description: >
+      Registros de avaliação bimestral dos alunos por disciplina.
+      Cada linha representa a avaliação de um aluno em uma turma,
+      em um bimestre específico, contendo as notas das quatro disciplinas
+      e a frequência do aluno naquele bimestre/disciplina.
+      A granularidade é aluno + turma + bimestre.
     columns:
-      - name: id_aluno
-        data_type: blob
-        description: ""
+      - name: aluno_id
+        data_type: varchar
+        description: "Identificador do aluno avaliado. Chave estrangeira para stg_rmi__aluno."
+        # FK: não nula e deve existir em stg_rmi__aluno
+        <<: *aluno_id_relationship_test
 
-      - name: id_turma
+      - name: turma_id
         data_type: bigint
-        description: ""
+        description: "Identificador da turma à qual a avaliação pertence. Chave estrangeira para stg_rmi__turma."
+        # FK: não nula e deve existir em stg_rmi__turma
+        <<: *turma_id_relationship_test
 
       - name: frequencia
         data_type: double
-        description: ""
+        description: "Percentual de frequência do aluno por disciplina/bimestre, no intervalo de 0 a 100."
+        # Não nula e dentro do intervalo percentual válido (0-100)
+        <<: *freq_tests
 
       - name: bimestre
-        data_type: int
-        description: ""
+        data_type: integer
+        description: "Bimestre ao qual a avaliação se refere. Valores válidos: 1, 2, 3 ou 4."
+        # Garante que apenas os quatro bimestres do ano letivo sejam aceitos
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_in_set:
+              value_set: [1, 2, 3, 4]
+
+      - name: is_aluno_ausente
+        data_type: boolean
+        description: "Indica se o aluno não possui nenhum registro de frequência neste bimestre. Derivado da ausência de valor em frequencia."
 
       - name: disciplina_1
         data_type: double
-        description: ""
+        description: "Nota do aluno na disciplina 1 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        # Não nula e dentro do intervalo de notas válido (0-10)
+        <<: *nota_disciplina_test
 
       - name: disciplina_2
         data_type: double
-        description: ""
+        description: "Nota do aluno na disciplina 2 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        # Não nula e dentro do intervalo de notas válido (0-10)
+        <<: *nota_disciplina_test
 
       - name: disciplina_3
         data_type: double
-        description: ""
+        description: "Nota do aluno na disciplina 3 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        # Não nula e dentro do intervalo de notas válido (0-10)
+        <<: *nota_disciplina_test
 
       - name: disciplina_4
         data_type: double
-        description: ""
+        description: "Nota do aluno na disciplina 4 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        # Não nula e dentro do intervalo de notas válido (0-10)
+        <<: *nota_disciplina_test
+
+      - name: is_disciplina_1_ausente
+        data_type: boolean
+        description: "Indica se a nota da disciplina 1 está ausente para este aluno/bimestre."
+
+      - name: is_disciplina_2_ausente
+        data_type: boolean
+        description: "Indica se a nota da disciplina 2 está ausente para este aluno/bimestre."
+
+      - name: is_disciplina_3_ausente
+        data_type: boolean
+        description: "Indica se a nota da disciplina 3 está ausente para este aluno/bimestre."
+
+      - name: is_disciplina_4_ausente
+        data_type: boolean
+        description: "Indica se a nota da disciplina 4 está ausente para este aluno/bimestre."
 
   - name: stg_rmi__escola
-    description: ""
+    description: >
+      Cadastro das unidades escolares da rede municipal.
+      Cada linha representa uma escola única, identificada por um ID
+      anonimizado e localizada em um bairro do Rio de Janeiro.
     columns:
-      - name: id_escola
+      - name: escola_id
         data_type: bigint
-        description: ""
+        description: "Identificador único da escola. Anonimizado."
+        # PK: deve ser única e não nula
+        <<: *id_tests
 
       - name: bairro
         data_type: bigint
-        description: ""
+        description: "Identificador do bairro onde a escola está localizada. Pode ser cruzado com a tabela de bairros do datario para enriquecimento geográfico."
+        # Toda escola deve estar associada a um bairro
+        data_tests:
+          - not_null
 
   - name: stg_rmi__frequencia
-    description: ""
+    # PK composta: a combinação escola + aluno + turma + disciplina deve ser única
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - escola_id
+            - aluno_id
+            - turma_id
+            - disciplina
+          config:
+            severity: warn
+    description: >
+      Registros de frequência anual dos alunos por disciplina.
+      Cada linha representa a frequência de um aluno em uma disciplina
+      específica dentro de uma turma ao longo do ano letivo,
+      com as datas de início e fim do período considerado.
+      A granularidade é escola + aluno + turma + disciplina.
     columns:
-      - name: id_escola
+      - name: escola_id
         data_type: bigint
-        description: ""
+        description: "Identificador da escola à qual o registro de frequência pertence. Chave estrangeira para stg_rmi__escola."
+        # FK: não nula e deve existir em stg_rmi__escola
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_rmi__escola')
+              field: escola_id
 
-      - name: id_aluno
-        data_type: blob
-        description: ""
+      - name: aluno_id
+        data_type: varchar
+        description: "Identificador do aluno. Chave estrangeira para stg_rmi__aluno."
+        # FK: não nula e deve existir em stg_rmi__aluno
+        <<: *aluno_id_relationship_test
 
-      - name: id_turma
+      - name: turma_id
         data_type: bigint
-        description: ""
+        description: "Identificador da turma. Chave estrangeira para stg_rmi__turma."
+        # FK: não nula e deve existir em stg_rmi__turma
+        <<: *turma_id_relationship_test
 
       - name: data_inicio
-        data_type: varchar
-        description: ""
+        data_type: date
+        description: "Data de início do período letivo considerado no cálculo da frequência."
 
       - name: data_fim
-        data_type: varchar
-        description: ""
+        data_type: date
+        description: "Data de fim do período letivo considerado no cálculo da frequência."
 
       - name: disciplina
         data_type: varchar
-        description: ""
+        description: "Identificador da disciplina à qual o registro de frequência se refere. Corresponde às colunas disciplina_1 a disciplina_4 da tabela de avaliação."
+        # Garante que apenas as quatro disciplinas definidas no domínio sejam aceitas
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_in_set:
+              value_set: ['disciplina_1', 'disciplina_2', 'disciplina_3', 'disciplina_4']
 
       - name: frequencia
         data_type: double
-        description: ""
+        description: "Percentual de frequência do aluno na disciplina ao longo do ano letivo, no intervalo de 0 a 100."
+        # Não nula e dentro do intervalo percentual válido (0-100)
+        <<: *freq_tests
+
+      - name: is_aluno_ausente
+        data_type: boolean
+        description: "Indica se o aluno não possui nenhum registro de frequência na disciplina no ano letivo."
 
   - name: stg_rmi__turma
-    description: ""
+    description: >
+      Relacionamento entre turmas e alunos matriculados no ano letivo.
+      Diferente do que o nome sugere, esta tabela não é uma dimensão de turma
+      com atributos como série e turno — essas informações não estão disponíveis
+      na fonte. Cada linha representa a matrícula de um aluno em uma turma,
+      sendo a PK composta pela combinação de turma_id e aluno_id.
+    # PK composta: a combinação turma + aluno deve ser única
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - turma_id
+            - aluno_id
     columns:
       - name: ano
+        data_type: integer
+        description: "Ano letivo ao qual a matrícula se refere."
+
+      - name: turma_id
         data_type: bigint
-        description: ""
+        description: "Identificador da turma. Compõe a chave primária junto com aluno_id."
+        # Parte da PK composta: não pode ser nula
+        data_tests:
+          - not_null
 
-      - name: id_turma
-        data_type: bigint
-        description: ""
-
-      - name: id_aluno
-        data_type: blob
-        description: ""
-
+      - name: aluno_id
+        data_type: varchar
+        description: "Identificador do aluno matriculado na turma. Compõe a chave primária junto com turma_id. Chave estrangeira para stg_rmi__aluno."
+        # Parte da PK composta: não nula e deve existir em stg_rmi__aluno
+        <<: *aluno_id_relationship_test
