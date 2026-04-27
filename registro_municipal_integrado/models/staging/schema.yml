@@ -120,45 +120,45 @@ models:
         data_type: boolean
         description: "Indica se o aluno não possui nenhum registro de frequência neste bimestre. Derivado da ausência de valor em frequencia."
 
-      - name: disciplina_1
+      - name: portugues
         data_type: double
-        description: "Nota do aluno na disciplina 1 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        description: "Nota do aluno em Português no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
         # Não nula e dentro do intervalo de notas válido (0-10)
         <<: *nota_disciplina_test
 
-      - name: disciplina_2
+      - name: ciencias
         data_type: double
-        description: "Nota do aluno na disciplina 2 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        description: "Nota do aluno em Ciências no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
         # Não nula e dentro do intervalo de notas válido (0-10)
         <<: *nota_disciplina_test
 
-      - name: disciplina_3
+      - name: Inglês
         data_type: double
-        description: "Nota do aluno na disciplina 3 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        description: "Nota do aluno em Inglês no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
         # Não nula e dentro do intervalo de notas válido (0-10)
         <<: *nota_disciplina_test
 
-      - name: disciplina_4
+      - name: matematica
         data_type: double
-        description: "Nota do aluno na disciplina 4 no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
+        description: "Nota do aluno em Matemática no bimestre, no intervalo de 0 a 10. Nulo quando não há registro de avaliação."
         # Não nula e dentro do intervalo de notas válido (0-10)
         <<: *nota_disciplina_test
 
-      - name: is_disciplina_1_ausente
+      - name: is_portugues_ausente
         data_type: boolean
-        description: "Indica se a nota da disciplina 1 está ausente para este aluno/bimestre."
+        description: "Indica se a nota de Português está ausente para este aluno/bimestre."
 
-      - name: is_disciplina_2_ausente
+      - name: is_ciencias_ausente
         data_type: boolean
-        description: "Indica se a nota da disciplina 2 está ausente para este aluno/bimestre."
+        description: "Indica se a nota de Ciências está ausente para este aluno/bimestre."
 
-      - name: is_disciplina_3_ausente
+      - name: is_ingles_ausente
         data_type: boolean
-        description: "Indica se a nota da disciplina 3 está ausente para este aluno/bimestre."
+        description: "Indica se a nota de Inglês está ausente para este aluno/bimestre."
 
-      - name: is_disciplina_4_ausente
+      - name: is_matematica_ausente
         data_type: boolean
-        description: "Indica se a nota da disciplina 4 está ausente para este aluno/bimestre."
+        description: "Indica se a nota de Matemática está ausente para este aluno/bimestre."
 
   - name: stg_rmi__escola
     description: >
@@ -233,7 +233,7 @@ models:
         # Garante que apenas as quatro disciplinas definidas no domínio sejam aceitas
         data_tests:
           - dbt_expectations.expect_column_values_to_be_in_set:
-              value_set: ['disciplina_1', 'disciplina_2', 'disciplina_3', 'disciplina_4']
+              value_set: ['Português', 'Ciências', 'Inglês', 'Matemática']
 
       - name: frequencia
         data_type: double
