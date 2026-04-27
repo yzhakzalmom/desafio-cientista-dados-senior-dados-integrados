@@ -1,0 +1,142 @@
+version: 2
+
+models:
+  - name: int_educacao__avaliacao_enriquecida
+    description: >
+      Modelo intermediate que normaliza os dados de avaliação acadêmica para o
+      grão aluno + turma + bimestre + disciplina. Realiza unpivot das notas por
+      disciplina, cria chave substituta e adiciona flags de ausência para análises
+      de desempenho acadêmico.
+
+    columns:
+      - name: avaliacao_sk
+        data_type: varchar
+        description: >
+          Chave substituta única da avaliação, gerada a partir de aluno_id,
+          turma_id, bimestre e disciplina.
+
+      - name: aluno_id
+        data_type: varchar
+        description: >
+          Identificador único do aluno avaliado.
+
+      - name: turma_id
+        data_type: bigint
+        description: >
+          Identificador da turma à qual o aluno pertence no período da avaliação.
+
+      - name: bimestre
+        data_type: integer
+        description: >
+          Período bimestral em que a avaliação foi realizada.
+
+      - name: disciplina
+        data_type: varchar
+        description: >
+          Disciplina referente à nota após normalização via unpivot
+          (português, ciências, inglês ou matemática).
+
+      - name: frequencia_anual
+        data_type: double
+        description: >
+          Percentual de frequência acumulada do aluno no ano letivo.
+
+      - name: is_aluno_ausente
+        data_type: boolean
+        description: >
+          Indica se o aluno esteve ausente durante o período letivo.
+
+      - name: is_prova_ausente
+        data_type: boolean
+        description: >
+          Indica se o aluno esteve ausente especificamente na avaliação
+          da disciplina.
+
+      - name: nota
+        data_type: double
+        description: >
+          Nota obtida pelo aluno na disciplina. Valores nulos são preenchidos com
+          zero quando há ausência na prova.
+
+  - name: int_educacao__frequencia_enriquecida
+    description: >
+      Modelo intermediate que enriquece os registros de frequência escolar com
+      informações demográficas do aluno e contexto da escola, permitindo análises
+      de presença por disciplina, período e localização.
+
+    columns:
+      - name: frequencia_sk
+        data_type: varchar
+        description: >
+          Chave substituta única do registro de frequência.
+
+      - name: escola_id
+        data_type: bigint
+        description: >
+          Identificador da escola associada ao registro de frequência.
+
+      - name: aluno_id
+        data_type: varchar
+        description: >
+          Identificador único do aluno.
+
+      - name: turma_id
+        data_type: bigint
+        description: >
+          Identificador da turma do aluno.
+
+      - name: data_inicio
+        data_type: date
+        description: >
+          Data inicial do período de frequência registrado.
+
+      - name: data_fim
+        data_type: date
+        description: >
+          Data final do período de frequência registrado.
+
+      - name: disciplina
+        data_type: varchar
+        description: >
+          Disciplina relacionada ao registro de frequência.
+
+      - name: frequencia
+        data_type: double
+        description: >
+          Percentual de frequência do aluno na disciplina e período informado.
+
+      - name: is_aluno_ausente
+        data_type: boolean
+        description: >
+          Indica se o aluno esteve ausente no período registrado.
+
+      - name: aluno_bairro
+        data_type: bigint
+        description: >
+          Identificador do bairro de residência do aluno.
+
+      - name: aluno_faixa_etaria
+        data_type: varchar
+        description: >
+          Faixa etária categorizada do aluno.
+
+      - name: escola_bairro
+        data_type: bigint
+        description: >
+          Identificador do bairro onde a escola está localizada.
+
+  - name: int_educacao__tamanho_turma
+    description: >
+      Modelo intermediate que calcula a quantidade de alunos matriculados por
+      turma, servindo como insumo para análises de capacidade e desempenho escolar.
+
+    columns:
+      - name: turma_id
+        data_type: bigint
+        description: >
+          Identificador único da turma.
+
+      - name: alunos_qtd
+        data_type: bigint
+        description: >
+          Quantidade total de alunos matriculados na turma.

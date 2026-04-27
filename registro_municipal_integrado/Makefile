@@ -1,5 +1,6 @@
 # Variáveis
 STAGING_DIR = ./models/staging/
+INTERMEDIATE_DIR = ./models/intermediate/
 SOURCE = rmi
 TABLES = aluno avaliacao escola frequencia turma
 
@@ -58,6 +59,14 @@ stg-models-schema: ## Gera o schema.yml com descrição dos models de staging
 		> $(STAGING_DIR)/schema.yml
 
 codegen-stg: deps create-source-views stg-base-models run-stg stg-models-schema ## Pipeline completo: instala deps, cria views e roda codegen
+
+int-models-schema: ## Gera o schema.yml dos models intermediate
+	@echo ">>> Gerando schema.yml da camada intermediate"
+	@uv run dbt --quiet run-operation generate_model_yaml \
+		--args '{"model_names": ["int_educacao__avaliacao_enriquecida", "int_educacao__frequencia_enriquecida", "int_educacao__tamanho_turma"]}' \
+		2>/dev/null \
+		| grep -v "^[0-9]\{2\}:" \
+		> $(INTERMEDIATE_DIR)/schema.yml
 
 # ===== COMANDOS COMPOSTOS PARA EXECUÇÃO E BUILD ===== #
 run-stg: ## Executa o model staging

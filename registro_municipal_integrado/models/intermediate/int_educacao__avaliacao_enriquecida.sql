@@ -1,18 +1,18 @@
 {#
   Modelo: int_rmi__avaliacao
   Camada: Intermediate (int)
-  
+
   Objetivo:
     Enriquece os registros de avaliação bimestral com atributos do aluno
-    (faixa etária) e da turma (tamanho), consolidando as informações
+    (faixa etária), consolidando as informações
     necessárias para análises downstream na camada mart.
 
-  Granularidade: aluno + turma + bimestre (herdada de stg_rmi__avaliacao)
+  Granularidade:
+    aluno + turma + bimestre + disciplina
 
   Fontes:
     - stg_rmi__avaliacao : notas e frequência por aluno/turma/bimestre
-    - stg_rmi__aluno     : atributos do aluno (faixa etária, bairro)
-    - stg_rmi__turma     : matrículas — usada apenas para calcular o tamanho da turma
+    - stg_rmi__aluno     : atributos do aluno
 #}
 
 WITH avaliacao AS (
@@ -21,68 +21,90 @@ WITH avaliacao AS (
 ),
 
 aluno AS (
-    SELECT * FROM {{ ref('stg_rmi__aluno') }}
-),
-
-turma AS (
-    SELECT * FROM {{ ref('stg_rmi__turma') }}
-),
-
-{# 
-  Calcula o tamanho de cada turma contando os alunos matriculados.
-  stg_rmi__turma tem granularidade aluno + turma, então um COUNT(aluno_id)
-  por turma_id equivale ao número de alunos matriculados na turma.
-  Este agregado é feito aqui para evitar fanout na CTE joined abaixo.
-#}
-tamanho_turma AS (
-    SELECT
-        turma_id,
-        count(aluno_id) AS tamanho
-    FROM turma
-    GROUP BY turma_id
+    SELECT *
+    FROM {{ ref('stg_rmi__aluno') }}
 ),
 
 joined AS (
     SELECT
-        {#
-          Surrogate key (SK) da avaliação, gerada a partir dos três campos
-          que compõem a PK natural de stg_rmi__avaliacao.
-          Usada como chave técnica em joins nas camadas downstream (mart).
-        #}
-        {{ 
-            dbt_utils.generate_surrogate_key([
-                'av.aluno_id',
-                'av.turma_id',
-                'av.bimestre'
-            ])
-        }} AS avaliacao_sk,
-
-        -- Todos os campos de avaliação (notas, frequência, flags de ausência, bimestre)
+        -- Todos os campos originais de avaliação
         av.*,
 
-        -- Atributo descritivo do aluno: faixa etária por extenso (ex: 'Adolescente')
-        -- Derivado de stg_rmi__aluno.faixa_etaria_num, útil para segmentação analítica
-        al.faixa_etaria_nome,
-
-        -- Quantidade de alunos matriculados na turma no ano letivo
-        -- Permite análises de desempenho relativas ao porte da turma
-        t.tamanho AS turma_tamanho
+        -- Faixa etária descritiva do aluno
+        -- Ex.: Infantil, Adolescente
+        al.faixa_etaria_nome
 
     FROM
         avaliacao AS av
 
     {#
-      LEFT JOINs garantem que nenhum registro de avaliação seja descartado
-      caso o aluno ou a turma não sejam encontrados nas tabelas de dimensão.
-      Isso pode ocorrer em casos de inconsistência na fonte ou carga parcial.
-      Os testes de FK em stg_rmi__avaliacao sinalizam esses casos previamente.
+      LEFT JOIN garante preservação total dos registros de avaliação,
+      mesmo em casos de inconsistência cadastral na tabela de alunos.
     #}
     LEFT JOIN
         aluno AS al
         ON av.aluno_id = al.aluno_id
-    LEFT JOIN
-        tamanho_turma AS t
-        ON av.turma_id = t.turma_id
+),
+
+unpivoted AS (
+    SELECT
+        *,
+        nota,
+        disciplina
+    FROM
+        joined
+
+    {#
+      Converte o formato wide de notas:
+        portugues | ciencias | ingles | matematica
+
+      Para formato long:
+        disciplina | nota
+
+      Isso facilita agregações analíticas por disciplina.
+    #}
+    UNPIVOT (
+        nota FOR disciplina IN (
+            portugues,
+            ciencias,
+            ingles,
+            matematica
+        )
+    )
+),
+
+sk_filled_flagged AS (
+    SELECT
+        -- Chave substituta que identifica unicamente
+        -- cada avaliação por aluno/turma/bimestre/disciplina
+        {{
+            dbt_utils.generate_surrogate_key([
+                'aluno_id',
+                'turma_id',
+                'bimestre',
+                'disciplina'
+            ])
+        }} AS avaliacao_sk,
+
+        aluno_id,
+        turma_id,
+        bimestre,
+        disciplina,
+        frequencia_anual,
+
+        -- Indica ausência geral do aluno durante o ano letivo
+        is_aluno_ausente,
+
+        -- Quando nota é nula significa ausência
+        -- especificamente naquela prova/disciplina
+        (nota IS NULL) AS is_prova_ausente,
+
+        -- Preenche notas nulas com zero para facilitar cálculos posteriores
+        -- sem perder a sinalização de ausência
+        COALESCE(nota, 0) AS nota
+
+    FROM unpivoted
 )
 
-SELECT * FROM joined
+SELECT *
+FROM sk_filled_flagged
