@@ -13,7 +13,7 @@ deps: ## Instala dependências do dbt
 	uv run dbt deps
 
 requirements-txt:
-	uv export --format requirements-txt > ../requirements.txt
+	uv export --format requirements-txt > requirements.txt
 
 run-stg: ## Executa os models dbt
 	uv run dbt run --select "models/staging"
