@@ -46,41 +46,6 @@ joined AS (
         ON av.aluno_id = al.aluno_id
 ),
 
-unpivoted AS (
-    {#
-      Importante:
-      - Este arquivo é um modelo dbt (tem Jinja). Rodar o SQL "cru" fora do dbt pode falhar.
-      - O DuckDB aplica o UNPIVOT sobre o conjunto de entrada; portanto, as colunas wide
-        (portugues/ciencias/ingles/matematica) precisam existir no `joined` e NÃO devem ser
-        projetadas "para fora" antes do UNPIVOT.
-    #}
-    SELECT
-        aluno_id,
-        faixa_etaria_nome,
-        turma_id,
-        bimestre,
-        frequencia_anual,
-        is_aluno_ausente,
-        nota,
-        disciplina
-    FROM
-        joined
-
-    {#
-      Converte o formato wide de notas:
-        portugues | ciencias | ingles | matematica
-
-      Para formato long:
-        disciplina | nota
-
-      Isso facilita agregações analíticas por disciplina e evita a proliferação de colunas
-      específicas por matéria nos marts.
-    #}
-    unpivot (
-        nota for disciplina in (portugues, ciencias, ingles, matematica)
-    )
-),
-
 sk_filled_flagged AS (
     SELECT
         -- Chave substituta que identifica unicamente
@@ -90,29 +55,24 @@ sk_filled_flagged AS (
                 'aluno_id',
                 'turma_id',
                 'bimestre',
-                'disciplina'
             ])
         }} AS avaliacao_sk,
 
         aluno_id,
         faixa_etaria_nome,
+        faixa_etaria_nome,
         turma_id,
         bimestre,
-        disciplina,
         frequencia_anual,
+        portugues,
+        ciencias,
+        ingles,
+        matematica,
 
         -- Indica ausência geral do aluno durante o ano letivo
-        is_aluno_ausente,
+        is_aluno_ausente
 
-        -- Quando nota é nula significa ausência
-        -- especificamente naquela prova/disciplina
-        (nota IS NULL) AS is_prova_ausente,
-
-        -- Preenche notas nulas com zero para facilitar cálculos posteriores
-        -- sem perder a sinalização de ausência (via `is_prova_ausente`)
-        COALESCE(nota, 0) AS nota
-
-    FROM unpivoted
+    FROM joined
 )
 
 SELECT *
