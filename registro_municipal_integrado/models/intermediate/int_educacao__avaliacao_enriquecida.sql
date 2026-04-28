@@ -60,7 +60,6 @@ sk_filled_flagged AS (
 
         aluno_id,
         faixa_etaria_nome,
-        faixa_etaria_nome,
         turma_id,
         bimestre,
         frequencia_anual,
