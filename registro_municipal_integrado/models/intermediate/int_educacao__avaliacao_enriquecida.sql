@@ -47,8 +47,20 @@ joined AS (
 ),
 
 unpivoted AS (
+    {#
+      Importante:
+      - Este arquivo é um modelo dbt (tem Jinja). Rodar o SQL "cru" fora do dbt pode falhar.
+      - O DuckDB aplica o UNPIVOT sobre o conjunto de entrada; portanto, as colunas wide
+        (portugues/ciencias/ingles/matematica) precisam existir no `joined` e NÃO devem ser
+        projetadas "para fora" antes do UNPIVOT.
+    #}
     SELECT
-        *,
+        aluno_id,
+        faixa_etaria_nome,
+        turma_id,
+        bimestre,
+        frequencia_anual,
+        is_aluno_ausente,
         nota,
         disciplina
     FROM
@@ -61,15 +73,11 @@ unpivoted AS (
       Para formato long:
         disciplina | nota
 
-      Isso facilita agregações analíticas por disciplina.
+      Isso facilita agregações analíticas por disciplina e evita a proliferação de colunas
+      específicas por matéria nos marts.
     #}
-    UNPIVOT (
-        nota FOR disciplina IN (
-            portugues,
-            ciencias,
-            ingles,
-            matematica
-        )
+    unpivot (
+        nota for disciplina in (portugues, ciencias, ingles, matematica)
     )
 ),
 
@@ -87,6 +95,7 @@ sk_filled_flagged AS (
         }} AS avaliacao_sk,
 
         aluno_id,
+        faixa_etaria_nome,
         turma_id,
         bimestre,
         disciplina,
@@ -100,7 +109,7 @@ sk_filled_flagged AS (
         (nota IS NULL) AS is_prova_ausente,
 
         -- Preenche notas nulas com zero para facilitar cálculos posteriores
-        -- sem perder a sinalização de ausência
+        -- sem perder a sinalização de ausência (via `is_prova_ausente`)
         COALESCE(nota, 0) AS nota
 
     FROM unpivoted
