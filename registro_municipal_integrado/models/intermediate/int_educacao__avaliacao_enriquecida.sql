@@ -46,33 +46,6 @@ joined AS (
         ON av.aluno_id = al.aluno_id
 ),
 
-unpivoted AS (
-    SELECT
-        *,
-        nota,
-        disciplina
-    FROM
-        joined
-
-    {#
-      Converte o formato wide de notas:
-        portugues | ciencias | ingles | matematica
-
-      Para formato long:
-        disciplina | nota
-
-      Isso facilita agregações analíticas por disciplina.
-    #}
-    UNPIVOT (
-        nota FOR disciplina IN (
-            portugues,
-            ciencias,
-            ingles,
-            matematica
-        )
-    )
-),
-
 sk_filled_flagged AS (
     SELECT
         -- Chave substituta que identifica unicamente
@@ -82,28 +55,23 @@ sk_filled_flagged AS (
                 'aluno_id',
                 'turma_id',
                 'bimestre',
-                'disciplina'
             ])
         }} AS avaliacao_sk,
 
         aluno_id,
+        faixa_etaria_nome,
         turma_id,
         bimestre,
-        disciplina,
         frequencia_anual,
+        portugues,
+        ciencias,
+        ingles,
+        matematica,
 
         -- Indica ausência geral do aluno durante o ano letivo
-        is_aluno_ausente,
+        is_aluno_ausente
 
-        -- Quando nota é nula significa ausência
-        -- especificamente naquela prova/disciplina
-        (nota IS NULL) AS is_prova_ausente,
-
-        -- Preenche notas nulas com zero para facilitar cálculos posteriores
-        -- sem perder a sinalização de ausência
-        COALESCE(nota, 0) AS nota
-
-    FROM unpivoted
+    FROM joined
 )
 
 SELECT *
